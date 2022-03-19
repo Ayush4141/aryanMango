@@ -1,24 +1,106 @@
-const mongoose = require("mongoose");
+// const mongoose = require("mongoose");
 const express = require("express");
 const app = express();
-const DB = "mongodb://127.0.0.1:27017/LibraryDB";
+const DB = "mongodb://127.0.0.1:3360/LibraryDB";
 const Book = require("./Book");
-const { Accession_No } = require("./helper");
+// const { Accession_No } = require("./helper");
 const { v4: uuid } = require("uuid");
 
 app.use(express.json());
 
-mongoose
+maria
   .connect(DB, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
   .then(() => {
-    console.log("MongoDB connections successful");
+    console.log("DB connections successful");
   })
   .catch((err) => {
     console.log(err);
   });
+
+
+app.post("/deleteBook", async (req, res) => {
+  // To get to know that which book we want to delete.
+  let Accession_No = req.data;
+  LibraryDB.collection('Books').deleteOne({ "Accession_No": Accession_No }, function(err, result) {
+    console.log('Book deleted');
+    LibraryDB.collection('Reader').deleteOne({ "Accession_No": Accession_No }, function(err, result) {
+      console.log('Reader deleted');
+    });
+    LibraryDB.close();
+  });
+}
+         
+app.post("/updateBook", async (req, res) => {
+  // To get to know that which book we want to update.
+  let Accession_No = req.data;
+  const bookRecord = LibraryDB.collection('Books').findOne({ "Accession_No": Accession_No });
+  const readerRecord = LibraryDB.collection('Reader').findOne({ "Accession_No": Accession_No });
+  
+  let title = data.title;
+  let author = data.author;
+  let publisher = data.publisher;
+  let edition = data.edition;
+  let yearOfPublication = data.yearOfPublication;
+  let category = data.category;
+  let totalPages = data.totalPages;
+  let price = data.price;
+  
+  bookRecord.update({
+    title,
+    author,
+    publisher,
+    edition,
+    yearOfPublication,
+    category,
+    totalPages,
+    price,
+  });
+  
+  readerRecord.update();
+  
+  bookRecord.save();
+  readerRecord.save();
+}
+
+
+// API for addition of a book:
+app.post("/addBook", async (req, res) => {
+  const Accession_No = uuid();
+  const data = req.data;
+  let ISBN = uuid();
+  let Accession_No = uuid();
+  let title = data.title;
+  let author = data.author;
+  let publisher = data.publisher;
+  let edition = data.edition;
+  let yearOfPublication = data.yearOfPublication;
+  let category = data.category;
+  let totalPages = data.totalPages;
+  let price = data.price;
+  
+  await Book.create({
+    ISBN,
+    Accession_No: Accession_No,
+    title,
+    author,
+    publisher,
+    edition,
+    yearOfPublication,
+    category,
+    totalPages,
+    price,
+  });
+  
+  await Reader.create({
+    readerId: uuid(),
+    Accession_No: Accession_No,
+    issueDate: Date.now(),
+    returnDate: Date.now()
+  });
+}
 
 // Route
 app.post("/insert_ten_entries", async (req, res) => {
